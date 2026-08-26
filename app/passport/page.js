@@ -8,9 +8,9 @@ export default function PassportPage() {
   const [loading, setLoading] = useState(false);
 
   const fees = {
-    series_a: { name: 'Ordinary Series A (32 Pages)', officialFee: 7500, serviceFee: 1000 },
-    series_b: { name: 'Ordinary Series B (48 Pages)', officialFee: 9500, serviceFee: 1000 },
-    series_c: { name: 'Ordinary Series C (64 Pages)', officialFee: 12500, serviceFee: 1000 },
+    series_a: { name: 'Ordinary Series A (32 Pages)', officialFee: 7500, serviceFee: 50 },
+    series_b: { name: 'Ordinary Series B (48 Pages)', officialFee: 9500, serviceFee: 50 },
+    series_c: { name: 'Ordinary Series C (64 Pages)', officialFee: 12500, serviceFee: 50 },
   };
 
   const selected = fees[passportType];
