@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ShieldCheck, CreditCard, Upload, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
+import { ShieldCheck, CreditCard, Upload, CheckCircle2, AlertTriangle, UserCheck, MapPin, FileText } from 'lucide-react';
 
 export default function PassportPage() {
   const [applicationType, setApplicationType] = useState('new');
@@ -24,7 +24,7 @@ export default function PassportPage() {
 
     setTimeout(() => {
       setLoading(false);
-      alert(`Details & documents saved! M-Pesa prompt sent to ${phoneNumber} for KSh ${totalAmount.toLocaleString()}.`);
+      alert(`Passport details & files submitted! M-Pesa prompt sent to ${phoneNumber} for KSh ${totalAmount.toLocaleString()}.`);
     }, 1500);
   };
 
@@ -32,7 +32,7 @@ export default function PassportPage() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">eCitizen Passport Application Portal</h1>
-        <p className="text-slate-600 text-sm mt-1">Submit your details and mandatory documents for guided eCitizen application processing.</p>
+        <p className="text-slate-600 text-sm mt-1">Complete your full eCitizen intake details and upload mandatory documents for concierge processing.</p>
       </div>
 
       <form onSubmit={handleFormSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -40,9 +40,11 @@ export default function PassportPage() {
         {/* Main Application Intake Section */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Step 1: Category & Type */}
+          {/* 1. Category, Size & Biometric Center */}
           <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">1. Application Type & Booklet Size</h2>
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-600" /> 1. Passport Category & Enrollment Location
+            </h2>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
@@ -66,27 +68,44 @@ export default function PassportPage() {
               ))}
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Select Passport Size</label>
-              <select
-                value={passportType}
-                onChange={(e) => setPassportType(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 text-slate-900 font-medium"
-              >
-                <option value="series_a">Ordinary Series A - 32 Pages (KSh 7,500)</option>
-                <option value="series_b">Ordinary Series B - 48 Pages (KSh 9,500)</option>
-                <option value="series_c">Ordinary Series C - 64 Pages (KSh 12,500)</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Select Passport Size</label>
+                <select
+                  value={passportType}
+                  onChange={(e) => setPassportType(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 text-slate-900 font-medium"
+                >
+                  <option value="series_a">Series A - 32 Pages (KSh 7,500)</option>
+                  <option value="series_b">Series B - 48 Pages (KSh 9,500)</option>
+                  <option value="series_c">Series C - 64 Pages (KSh 12,500)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Select Biometrics Location</label>
+                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="nairobi">Nairobi (Nyayo House)</option>
+                  <option value="mombasa">Mombasa</option>
+                  <option value="kisumu">Kisumu</option>
+                  <option value="nakuru">Nakuru</option>
+                  <option value="eldoret">Eldoret</option>
+                  <option value="embu">Embu</option>
+                  <option value="kisii">Kisii</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Step 2: Personal Details */}
+          {/* 2. Personal & Physical Attributes */}
           <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">2. Applicant Personal Details</h2>
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-blue-600" /> 2. Personal & Physical Details
+            </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Full Legal Name (ID Card)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Full Legal Name (National ID)</label>
                 <input type="text" required placeholder="e.g. Wanjiku Mary Kamau" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
               <div>
@@ -95,37 +114,144 @@ export default function PassportPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Recommender Full Name</label>
-                <input type="text" required placeholder="Recommender's Full Name" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Date of Birth</label>
+                <input type="date" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Recommender ID Number</label>
-                <input type="text" required placeholder="87654321" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Gender</label>
+                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Color of Eyes</label>
+                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="brown">Brown</option>
+                  <option value="black">Black</option>
+                  <option value="blue">Blue</option>
+                  <option value="green">Green</option>
+                  <option value="hazel">Hazel</option>
+                </select>
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Preferred Biometrics Center</label>
-              <select className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
-                <option value="nairobi">Nairobi (Nyayo House)</option>
-                <option value="mombasa">Mombasa</option>
-                <option value="kisumu">Kisumu</option>
-                <option value="nakuru">Nakuru</option>
-                <option value="eldoret">Eldoret</option>
-                <option value="embu">Embu</option>
-                <option value="kisii">Kisii</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Height (Feet & Inches)</label>
+                <input type="text" required placeholder="e.g. 5 ft 8 in" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">KRA PIN Number</label>
+                <input type="text" required placeholder="A012345678Z" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium uppercase" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Citizenship By</label>
+                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="birth">Birth</option>
+                  <option value="registration">Registration</option>
+                  <option value="naturalization">Naturalization</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Profession / Occupation</label>
+                <input type="text" required placeholder="e.g. Nurse, Driver, Engineer" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Marital Status</label>
+                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="single">Single</option>
+                  <option value="married">Married</option>
+                  <option value="divorced">Divorced</option>
+                  <option value="widowed">Widowed</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Reason for Travel</label>
+                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="employment">Employment / Work</option>
+                  <option value="education">Education / Studies</option>
+                  <option value="tourism">Tourism / Business</option>
+                  <option value="medical">Medical Treatment</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Step 3: File Uploads */}
+          {/* 3. Birth Location Details */}
           <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">3. Upload Required Supporting Documents</h2>
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-600" /> 3. Birth Location Details
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Country of Birth</label>
+                <input type="text" required defaultValue="Kenya" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">County of Birth</label>
+                <input type="text" required placeholder="e.g. Kiambu, Kakamega" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Place / Hospital of Birth</label>
+                <input type="text" required placeholder="e.g. Pumwani, Nakuru Town" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Residential & Contact Details */}
+          <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-600" /> 4. Residential & Contact Details
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">County of Residence</label>
+                <input type="text" required placeholder="e.g. Nairobi, Uasin Gishu" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Sub-Location / Estate</label>
+                <input type="text" required placeholder="e.g. Roysambu, Westlands" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Village / House No. / Street</label>
+                <input type="text" required placeholder="e.g. House No. 12B, Kimathi St" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Postal Address</label>
+                <input type="text" required placeholder="P.O. Box 00100 Nairobi" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Phone Number (WhatsApp)</label>
+                <input type="tel" required placeholder="07XX XXX XXX" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Email Address</label>
+                <input type="email" required placeholder="applicant@gmail.com" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+              </div>
+            </div>
+          </div>
+
+          {/* 5. Document Upload Section */}
+          <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <Upload className="w-5 h-5 text-blue-600" /> 5. Document Uploads
+            </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              
               <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
                 <label className="block font-bold text-slate-800 mb-1">Birth Certificate (PDF/Image)</label>
                 <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
@@ -151,7 +277,6 @@ export default function PassportPage() {
                 <input type="file" accept="image/*,.pdf" className="w-full text-slate-500" />
               </div>
 
-              {/* Conditional Uploads based on Category */}
               {(applicationType === 'renewal' || applicationType === 'mutilated') && (
                 <div className="border border-dashed border-blue-300 p-3 rounded-lg bg-blue-50 sm:col-span-2">
                   <label className="block font-bold text-blue-900 mb-1">Old Passport Copy (Last 3 Pages)</label>
@@ -161,7 +286,7 @@ export default function PassportPage() {
 
               {applicationType === 'lost' && (
                 <div className="border border-dashed border-amber-300 p-3 rounded-lg bg-amber-50 sm:col-span-2 space-y-2">
-                  <label className="block font-bold text-amber-900">Lost Passport Extras (Sworn Affidavit + Police Abstract)</label>
+                  <label className="block font-bold text-amber-900">Lost Passport Extras (Affidavit + Police Abstract)</label>
                   <input type="file" required accept="image/*,.pdf" className="w-full text-amber-800" />
                 </div>
               )}
@@ -172,16 +297,17 @@ export default function PassportPage() {
                   <input type="file" required accept="image/*,.pdf" className="w-full text-amber-800" />
                 </div>
               )}
-
             </div>
           </div>
 
-          {/* Step 4: Payment Submission */}
+          {/* 6. Payment & Final Submission */}
           <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">4. Payment & Final Submission</h2>
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-blue-600" /> 6. Payment & Final Submission
+            </h2>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">M-Pesa Phone Number</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">M-Pesa Phone Number for Fee Prompt</label>
               <input
                 type="tel"
                 required
@@ -198,7 +324,7 @@ export default function PassportPage() {
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-lg transition flex items-center justify-center gap-2 shadow-sm text-sm"
             >
               <CreditCard className="w-5 h-5" />
-              {loading ? 'Processing Submission...' : `Submit Application & Pay KSh ${totalAmount.toLocaleString()}`}
+              {loading ? 'Processing Submission...' : `Submit Intake & Pay KSh ${totalAmount.toLocaleString()} via M-Pesa`}
             </button>
           </div>
 
@@ -209,7 +335,7 @@ export default function PassportPage() {
           <div className="bg-slate-900 text-white p-6 rounded-xl shadow-md sticky top-24 space-y-6">
             <div>
               <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider mb-4">
-                <ShieldCheck className="w-5 h-5" /> Broadshore Managed Service
+                <ShieldCheck className="w-5 h-5" /> Broadshore Passport Engine
               </div>
               
               <h3 className="text-base font-bold border-b border-slate-800 pb-3">Fee Breakdown</h3>
@@ -220,7 +346,7 @@ export default function PassportPage() {
                   <span>KSh {selectedFee.officialFee.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
-                  <span>Concierge Service Fee</span>
+                  <span>Broadshore Concierge Fee</span>
                   <span>KSh {selectedFee.serviceFee.toLocaleString()}</span>
                 </div>
                 <div className="border-t border-slate-800 pt-3 flex justify-between font-bold text-sm text-white">
@@ -232,13 +358,13 @@ export default function PassportPage() {
 
             <div className="bg-slate-800/80 p-3 rounded-lg text-xs text-slate-400 space-y-2 border border-slate-700">
               <div className="flex items-center gap-1.5 text-slate-200 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Submission Workflow
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Automated Workflow
               </div>
               <p className="text-slate-400 leading-relaxed">
-                1. Submit form & documents.<br/>
-                2. Complete M-Pesa payment.<br/>
-                3. Our team files your eCitizen forms.<br/>
-                4. Receive official application PDF & biometrics appointment date in your portal.
+                1. Submit all physical & residential details.<br/>
+                2. Complete M-Pesa fee payment.<br/>
+                3. Our team files your eCitizen profile.<br/>
+                4. Download official biometrics booking PDF & payment receipt in your portal.
               </p>
             </div>
           </div>
