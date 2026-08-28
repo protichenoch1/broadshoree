@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ShieldCheck, CreditCard, Upload, CheckCircle2, AlertTriangle, UserCheck, MapPin, FileText } from 'lucide-react';
+import { ShieldCheck, CreditCard, Upload, CheckCircle2, UserCheck, MapPin, FileText } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { uploadApplicantFile } from '@/lib/upload';
 
 export default function PassportPage() {
   const [applicationType, setApplicationType] = useState('new');
@@ -18,14 +20,77 @@ export default function PassportPage() {
   const selectedFee = fees[passportType];
   const totalAmount = selectedFee.officialFee + selectedFee.serviceFee;
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const formData = new FormData(e.target);
+      const uploadedDocs = [];
+
+      // Define files to upload to Supabase Storage
+      const filesToUpload = [
+        { field: 'birthCert', label: 'Birth Certificate' },
+        { field: 'nationalId', label: 'National ID' },
+        { field: 'passportPhoto', label: 'Passport Photo' },
+        { field: 'recommenderId', label: 'Recommender ID' },
+        { field: 'parentsId', label: 'Parents ID' },
+        { field: 'oldPassport', label: 'Old Passport' },
+        { field: 'lostPoliceAbstract', label: 'Police Abstract / Affidavit' },
+      ];
+
+      for (const item of filesToUpload) {
+        const file = formData.get(item.field);
+        if (file && file instanceof File && file.size > 0) {
+          const uploaded = await uploadApplicantFile(file, 'passport-docs');
+          if (uploaded) {
+            uploadedDocs.push({ label: item.label, ...uploaded });
+          }
+        }
+      }
+
+      // Save intake payload directly to Supabase DB
+      const { data, error } = await supabase
+        .from('passport_applications')
+        .insert([
+          {
+            full_name: formData.get('fullName'),
+            id_number: formData.get('idNumber'),
+            dob: formData.get('dob'),
+            gender: formData.get('gender'),
+            eye_color: formData.get('eyeColor'),
+            height: formData.get('height'),
+            kra_pin: formData.get('kraPin'),
+            citizenship: formData.get('citizenship'),
+            occupation: formData.get('occupation'),
+            marital_status: formData.get('maritalStatus'),
+            reason_for_travel: formData.get('reasonForTravel'),
+            country_of_birth: formData.get('countryOfBirth'),
+            county_of_birth: formData.get('countyOfBirth'),
+            place_of_birth: formData.get('placeOfBirth'),
+            county_of_residence: formData.get('countyOfResidence'),
+            sub_location: formData.get('subLocation'),
+            village_house_no: formData.get('villageHouseNo'),
+            postal_address: formData.get('postalAddress'),
+            phone_number: phoneNumber,
+            email_address: formData.get('email'),
+            passport_type: passportType,
+            biometrics_center: formData.get('biometricCenter'),
+            amount_paid: totalAmount,
+            status: 'Pending Filing',
+            documents: uploadedDocs,
+          },
+        ]);
+
+      if (error) throw error;
+
+      alert(`Application successfully saved to Supabase! M-Pesa prompt sent to ${phoneNumber}.`);
+      e.target.reset();
+    } catch (err) {
+      alert(`Error submitting application: ${err.message}`);
+    } finally {
       setLoading(false);
-      alert(`Passport details & files submitted! M-Pesa prompt sent to ${phoneNumber} for KSh ${totalAmount.toLocaleString()}.`);
-    }, 1500);
+    }
   };
 
   return (
@@ -36,8 +101,6 @@ export default function PassportPage() {
       </div>
 
       <form onSubmit={handleFormSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Main Application Intake Section */}
         <div className="lg:col-span-2 space-y-6">
           
           {/* 1. Category, Size & Biometric Center */}
@@ -84,7 +147,7 @@ export default function PassportPage() {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Select Biometrics Location</label>
-                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                <select name="biometricCenter" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
                   <option value="nairobi">Nairobi (Nyayo House)</option>
                   <option value="mombasa">Mombasa</option>
                   <option value="kisumu">Kisumu</option>
@@ -106,34 +169,34 @@ export default function PassportPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Full Legal Name (National ID)</label>
-                <input type="text" required placeholder="e.g. Wanjiku Mary Kamau" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="fullName" type="text" required placeholder="e.g. Wanjiku Mary Kamau" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">National ID Number</label>
-                <input type="text" required placeholder="12345678" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="idNumber" type="text" required placeholder="12345678" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Date of Birth</label>
-                <input type="date" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="dob" type="date" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Gender</label>
-                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
+                <select name="gender" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Color of Eyes</label>
-                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
-                  <option value="brown">Brown</option>
-                  <option value="black">Black</option>
-                  <option value="blue">Blue</option>
-                  <option value="green">Green</option>
-                  <option value="hazel">Hazel</option>
+                <select name="eyeColor" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="Brown">Brown</option>
+                  <option value="Black">Black</option>
+                  <option value="Blue">Blue</option>
+                  <option value="Green">Green</option>
+                  <option value="Hazel">Hazel</option>
                 </select>
               </div>
             </div>
@@ -141,18 +204,18 @@ export default function PassportPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Height (Feet & Inches)</label>
-                <input type="text" required placeholder="e.g. 5 ft 8 in" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="height" type="text" required placeholder="e.g. 5 ft 8 in" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">KRA PIN Number</label>
-                <input type="text" required placeholder="A012345678Z" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium uppercase" />
+                <input name="kraPin" type="text" required placeholder="A012345678Z" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium uppercase" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Citizenship By</label>
-                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
-                  <option value="birth">Birth</option>
-                  <option value="registration">Registration</option>
-                  <option value="naturalization">Naturalization</option>
+                <select name="citizenship" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="Birth">Birth</option>
+                  <option value="Registration">Registration</option>
+                  <option value="Naturalization">Naturalization</option>
                 </select>
               </div>
             </div>
@@ -160,24 +223,24 @@ export default function PassportPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Profession / Occupation</label>
-                <input type="text" required placeholder="e.g. Nurse, Driver, Engineer" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="occupation" type="text" required placeholder="e.g. Nurse, Driver, Engineer" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Marital Status</label>
-                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
-                  <option value="single">Single</option>
-                  <option value="married">Married</option>
-                  <option value="divorced">Divorced</option>
-                  <option value="widowed">Widowed</option>
+                <select name="maritalStatus" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="Single">Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Divorced">Divorced</option>
+                  <option value="Widowed">Widowed</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Reason for Travel</label>
-                <select required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
-                  <option value="employment">Employment / Work</option>
-                  <option value="education">Education / Studies</option>
-                  <option value="tourism">Tourism / Business</option>
-                  <option value="medical">Medical Treatment</option>
+                <select name="reasonForTravel" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
+                  <option value="Employment">Employment / Work</option>
+                  <option value="Education">Education / Studies</option>
+                  <option value="Tourism">Tourism / Business</option>
+                  <option value="Medical">Medical Treatment</option>
                 </select>
               </div>
             </div>
@@ -192,15 +255,15 @@ export default function PassportPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Country of Birth</label>
-                <input type="text" required defaultValue="Kenya" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium" />
+                <input name="countryOfBirth" type="text" required defaultValue="Kenya" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">County of Birth</label>
-                <input type="text" required placeholder="e.g. Kiambu, Kakamega" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="countyOfBirth" type="text" required placeholder="e.g. Kiambu, Kakamega" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Place / Hospital of Birth</label>
-                <input type="text" required placeholder="e.g. Pumwani, Nakuru Town" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="placeOfBirth" type="text" required placeholder="e.g. Pumwani, Nakuru Town" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
             </div>
           </div>
@@ -214,33 +277,40 @@ export default function PassportPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">County of Residence</label>
-                <input type="text" required placeholder="e.g. Nairobi, Uasin Gishu" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="countyOfResidence" type="text" required placeholder="e.g. Nairobi, Uasin Gishu" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Sub-Location / Estate</label>
-                <input type="text" required placeholder="e.g. Roysambu, Westlands" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="subLocation" type="text" required placeholder="e.g. Roysambu, Westlands" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Village / House No. / Street</label>
-                <input type="text" required placeholder="e.g. House No. 12B, Kimathi St" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="villageHouseNo" type="text" required placeholder="e.g. House No. 12B, Kimathi St" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Postal Address</label>
-                <input type="text" required placeholder="P.O. Box 00100 Nairobi" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="postalAddress" type="text" required placeholder="P.O. Box 00100 Nairobi" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Phone Number (WhatsApp)</label>
-                <input type="tel" required placeholder="07XX XXX XXX" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium" />
+                <input
+                  type="tel"
+                  required
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="07XX XXX XXX"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium"
+                />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Email Address</label>
-                <input type="email" required placeholder="applicant@gmail.com" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+                <input name="email" type="email" required placeholder="applicant@gmail.com" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
               </div>
             </div>
           </div>
@@ -254,47 +324,40 @@ export default function PassportPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
                 <label className="block font-bold text-slate-800 mb-1">Birth Certificate (PDF/Image)</label>
-                <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+                <input name="birthCert" type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
               </div>
 
               <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
                 <label className="block font-bold text-slate-800 mb-1">National ID Card (Front & Back)</label>
-                <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+                <input name="nationalId" type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
               </div>
 
               <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
                 <label className="block font-bold text-slate-800 mb-1">Passport Size Photo (White Background)</label>
-                <input type="file" required accept="image/*" className="w-full text-slate-500" />
+                <input name="passportPhoto" type="file" required accept="image/*" className="w-full text-slate-500" />
               </div>
 
               <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
                 <label className="block font-bold text-slate-800 mb-1">Recommender's ID Copy</label>
-                <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+                <input name="recommenderId" type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
               </div>
 
               <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50 sm:col-span-2">
                 <label className="block font-bold text-slate-800 mb-1">Parents' ID Cards / Death Certificates</label>
-                <input type="file" accept="image/*,.pdf" className="w-full text-slate-500" />
+                <input name="parentsId" type="file" accept="image/*,.pdf" className="w-full text-slate-500" />
               </div>
 
               {(applicationType === 'renewal' || applicationType === 'mutilated') && (
                 <div className="border border-dashed border-blue-300 p-3 rounded-lg bg-blue-50 sm:col-span-2">
                   <label className="block font-bold text-blue-900 mb-1">Old Passport Copy (Last 3 Pages)</label>
-                  <input type="file" required accept="image/*,.pdf" className="w-full text-blue-800" />
+                  <input name="oldPassport" type="file" required accept="image/*,.pdf" className="w-full text-blue-800" />
                 </div>
               )}
 
-              {applicationType === 'lost' && (
+              {(applicationType === 'lost' || applicationType === 'mutilated') && (
                 <div className="border border-dashed border-amber-300 p-3 rounded-lg bg-amber-50 sm:col-span-2 space-y-2">
-                  <label className="block font-bold text-amber-900">Lost Passport Extras (Affidavit + Police Abstract)</label>
-                  <input type="file" required accept="image/*,.pdf" className="w-full text-amber-800" />
-                </div>
-              )}
-
-              {applicationType === 'mutilated' && (
-                <div className="border border-dashed border-amber-300 p-3 rounded-lg bg-amber-50 sm:col-span-2 space-y-2">
-                  <label className="block font-bold text-amber-900">Mutilated Passport Sworn Affidavit & Explanation</label>
-                  <input type="file" required accept="image/*,.pdf" className="w-full text-amber-800" />
+                  <label className="block font-bold text-amber-900">Police Abstract & Sworn Affidavit</label>
+                  <input name="lostPoliceAbstract" type="file" required accept="image/*,.pdf" className="w-full text-amber-800" />
                 </div>
               )}
             </div>
@@ -306,25 +369,13 @@ export default function PassportPage() {
               <CreditCard className="w-5 h-5 text-blue-600" /> 6. Payment & Final Submission
             </h2>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">M-Pesa Phone Number for Fee Prompt</label>
-              <input
-                type="tel"
-                required
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="07XX XXX XXX"
-                className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium"
-              />
-            </div>
-
             <button
               type="submit"
               disabled={loading}
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-lg transition flex items-center justify-center gap-2 shadow-sm text-sm"
             >
               <CreditCard className="w-5 h-5" />
-              {loading ? 'Processing Submission...' : `Submit Intake & Pay KSh ${totalAmount.toLocaleString()} via M-Pesa`}
+              {loading ? 'Uploading Files & Submitting...' : `Submit Intake & Pay KSh ${totalAmount.toLocaleString()} via M-Pesa`}
             </button>
           </div>
 
@@ -358,13 +409,12 @@ export default function PassportPage() {
 
             <div className="bg-slate-800/80 p-3 rounded-lg text-xs text-slate-400 space-y-2 border border-slate-700">
               <div className="flex items-center gap-1.5 text-slate-200 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Automated Workflow
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Supabase Connected
               </div>
               <p className="text-slate-400 leading-relaxed">
-                1. Submit all physical & residential details.<br/>
-                2. Complete M-Pesa fee payment.<br/>
-                3. Our team files your eCitizen profile.<br/>
-                4. Download official biometrics booking PDF & payment receipt in your portal.
+                1. Intakes are securely written to your Supabase SQL database.<br/>
+                2. Verification files are stored in your Supabase Storage bucket.<br/>
+                3. Applications render immediately on your Admin Dashboard.
               </p>
             </div>
           </div>
