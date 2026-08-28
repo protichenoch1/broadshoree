@@ -15,13 +15,38 @@ import {
   ShieldCheck,
   CreditCard,
   MapPin,
-  Briefcase
+  Briefcase,
+  Lock,
+  LogOut
 } from 'lucide-react';
 
 export default function AdminDashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passcode, setPasscode] = useState('');
+  const [authError, setAuthError] = useState(false);
+
   const [activeTab, setActiveTab] = useState('passports'); // 'passports' | 'jobs'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
+
+  // Preferred admin access passcode
+  const ADMIN_SECRET = 'Broadshore2026!';
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (passcode === ADMIN_SECRET) {
+      setIsAuthenticated(true);
+      setAuthError(false);
+    } else {
+      setAuthError(true);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setPasscode('');
+    setSelectedItem(null);
+  };
 
   // Mock Passport Submissions (Captured from your /passport intake form)
   const [passportApplications, setPassportApplications] = useState([
@@ -116,6 +141,46 @@ export default function AdminDashboard() {
     }
   };
 
+  // 1. Render Password Authentication Shield
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center p-4">
+        <div className="bg-white border border-slate-200 p-8 rounded-2xl shadow-xl w-full max-w-md space-y-6">
+          <div className="text-center space-y-3">
+            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mx-auto text-blue-600 border border-blue-100 shadow-inner">
+              <Lock className="w-7 h-7" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900">Broadshore Admin Portal</h1>
+            <p className="text-slate-500 text-xs">Enter your passcode to manage passport submissions and candidates.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                placeholder="Enter Admin Passcode"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3.5 text-sm text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+              />
+              {authError && (
+                <p className="text-rose-600 text-xs mt-2 font-semibold text-center">Incorrect passcode. Try again.</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-sm"
+            >
+              Unlock Dashboard
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Render Main Admin Dashboard when Authenticated
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6">
       
@@ -128,23 +193,33 @@ export default function AdminDashboard() {
           <p className="text-sm text-slate-500 mt-1">Manage eCitizen passport submissions, candidate intakes, and document verifications.</p>
         </div>
 
-        {/* Tab Selection Switcher */}
-        <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold border border-slate-200">
+        {/* Tab Selection Switcher & Logout */}
+        <div className="flex items-center gap-3">
+          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold border border-slate-200">
+            <button
+              onClick={() => { setActiveTab('passports'); setSelectedItem(null); }}
+              className={`px-4 py-2.5 rounded-lg transition flex items-center gap-2 ${
+                activeTab === 'passports' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FileCheck className="w-4 h-4" /> Passport Processing ({passportApplications.length})
+            </button>
+            <button
+              onClick={() => { setActiveTab('jobs'); setSelectedItem(null); }}
+              className={`px-4 py-2.5 rounded-lg transition flex items-center gap-2 ${
+                activeTab === 'jobs' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-4 h-4" /> Candidate Applications ({jobApplications.length})
+            </button>
+          </div>
+
           <button
-            onClick={() => { setActiveTab('passports'); setSelectedItem(null); }}
-            className={`px-4 py-2.5 rounded-lg transition flex items-center gap-2 ${
-              activeTab === 'passports' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            onClick={handleLogout}
+            title="Lock Dashboard"
+            className="p-2.5 text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 rounded-xl transition"
           >
-            <FileCheck className="w-4 h-4" /> Passport Processing ({passportApplications.length})
-          </button>
-          <button
-            onClick={() => { setActiveTab('jobs'); setSelectedItem(null); }}
-            className={`px-4 py-2.5 rounded-lg transition flex items-center gap-2 ${
-              activeTab === 'jobs' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Users className="w-4 h-4" /> Candidate Applications ({jobApplications.length})
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
