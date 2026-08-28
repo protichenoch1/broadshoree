@@ -1,68 +1,214 @@
 'use client';
 
-import { Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Briefcase, FileText, ShieldCheck, HeartPulse, Upload, CheckCircle2 } from 'lucide-react';
 
-function ApplyForm() {
+function FormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedJob = searchParams.get('job') || '';
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert('Application submitted successfully!');
-    router.push('/dashboard');
-  };
+  const [hasPassport, setHasPassport] = useState('yes');
+  const [destination, setDestination] = useState('uk');
+  const [loading, setLoading] = useState(false);
 
-  const handlePassportChange = (e) => {
-    if (e.target.value === 'no') {
-      if (confirm('No passport detected. Would you like to request eCitizen passport guidance first?')) {
+  const handlePassportCheck = (e) => {
+    const val = e.target.value;
+    setHasPassport(val);
+    if (val === 'no') {
+      if (confirm('A valid passport with at least 6 months validity is required. Would you like to request eCitizen passport guidance now?')) {
         router.push('/passport');
       }
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    setTimeout(() => {
+      setLoading(false);
+      alert('Application and verification documents submitted successfully! Our recruitment team will review your profile.');
+      router.push('/dashboard');
+    }, 1500);
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Full Official Name (National ID / Passport)</label>
-        <input type="text" required placeholder="e.g. Wanjiku Mary Kamau" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900" />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      
+      {/* 1. Job & Destination Selection */}
+      <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
+        <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+          <Briefcase className="w-5 h-5 text-blue-600" /> Target Position & Placement Country
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Target Position</label>
+            <input
+              type="text"
+              required
+              defaultValue={preselectedJob}
+              placeholder="e.g. Registered Nurse, Heavy Equipment Driver"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Destination Country</label>
+            <select
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="uk">United Kingdom (NHS / Healthcare / Care Work)</option>
+              <option value="canada">Canada (LMIA / Construction / Transport)</option>
+              <option value="uae">Dubai / UAE (Hospitality / Logistics)</option>
+              <option value="germany">Germany (Technical / Trade / Nursing)</option>
+              <option value="qatar">Qatar / Gulf Region</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">National ID Number</label>
-        <input type="text" required placeholder="12345678" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900" />
+      {/* 2. Personal & Travel Documents */}
+      <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
+        <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+          <FileText className="w-5 h-5 text-blue-600" /> 1. Personal & Travel Documents
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Full Name (As on ID / Passport)</label>
+            <input type="text" required placeholder="e.g. Wanjiku Mary Kamau" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">National ID Number</label>
+            <input type="text" required placeholder="12345678" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Kenyan Passport Status</label>
+          <select
+            value={hasPassport}
+            onChange={handlePassportCheck}
+            className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium"
+          >
+            <option value="yes">Valid Passport (6+ months validity & blank pages available)</option>
+            <option value="processing">Applied on eCitizen (Biometrics / Processing)</option>
+            <option value="no">No Passport (Redirect for Assistance)</option>
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">Passport Copy (Bio Page)</label>
+            <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+          </div>
+
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">National ID & Birth Cert</label>
+            <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+          </div>
+
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">Passport & Full-Size Photo</label>
+            <input type="file" required accept="image/*" className="w-full text-slate-500" />
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Target Position</label>
-        <input type="text" defaultValue={preselectedJob} required placeholder="e.g. Registered Nurse" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900" />
+      {/* 3. Professional & Educational Records */}
+      <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
+        <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+          <Briefcase className="w-5 h-5 text-blue-600" /> 2. Professional & Educational Records
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">Tailored CV / Resume (PDF)</label>
+            <input type="file" required accept=".pdf,.doc,.docx" className="w-full text-slate-500" />
+          </div>
+
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">Academic Certificates & Transcripts</label>
+            <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+          </div>
+
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">Trade Test / Professional Licenses</label>
+            <input type="file" accept="image/*,.pdf" className="w-full text-slate-500" />
+          </div>
+
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">Cover Letter (Optional)</label>
+            <input type="file" accept=".pdf,.doc,.docx" className="w-full text-slate-500" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Language Proficiency Score (IELTS / German Level / TOEFL - if applicable)</label>
+          <input type="text" placeholder="e.g. IELTS General Score: 7.0 or N/A" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Do you have a Passport?</label>
-        <select onChange={handlePassportChange} className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900">
-          <option value="yes">Yes, I have an active Kenyan Passport</option>
-          <option value="processing">Applied on eCitizen (In progress)</option>
-          <option value="no">No (Redirect to Passport Support)</option>
-        </select>
+      {/* 4. Legal, Background & Health Clearances */}
+      <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
+        <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-blue-600" /> 3. Legal Clearances & Health Records
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">Certificate of Good Conduct (DCI)</label>
+            <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+          </div>
+
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">Medical Fitness Certificate</label>
+            <input type="file" accept="image/*,.pdf" className="w-full text-slate-500" />
+          </div>
+
+          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
+            <label className="block font-bold text-slate-800 mb-1">Vaccination Records (Yellow Card)</label>
+            <input type="file" accept="image/*,.pdf" className="w-full text-slate-500" />
+          </div>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 text-blue-900 p-3 rounded-lg text-xs flex items-start gap-2">
+          <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+          <p>
+            <strong>NEAMIS Registration Notice:</strong> Broadshore cross-references candidate applications with the National Employment Authority Integrated Management System (NEAMIS) for legitimate Kenya labor export compliance.
+          </p>
+        </div>
       </div>
 
-      <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition mt-2 shadow-sm">
-        Submit Application
+      {/* Submit Button */}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-base"
+      >
+        <Upload className="w-5 h-5" />
+        {loading ? 'Uploading Application Profile...' : 'Submit Complete Candidate Application'}
       </button>
+
     </form>
   );
 }
 
 export default function ApplyPage() {
   return (
-    <div className="max-w-xl mx-auto bg-white border border-slate-200 p-6 md:p-8 rounded-xl shadow-sm">
-      <h1 className="text-2xl font-bold text-slate-900 mb-1">Candidate Application</h1>
-      <p className="text-slate-600 text-sm mb-6">Register your candidate profile with Broadshore Kenya.</p>
-      
-      <Suspense fallback={<div className="text-slate-500 text-sm">Loading application form...</div>}>
-        <ApplyForm />
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Overseas Candidate Registration</h1>
+        <p className="text-slate-600 text-sm mt-1">Upload your verified documents to apply for international job openings.</p>
+      </div>
+
+      <Suspense fallback={<div className="text-slate-500 text-sm">Loading application portal...</div>}>
+        <FormContent />
       </Suspense>
     </div>
   );
