@@ -9,7 +9,6 @@ import {
   Search, 
   Eye, 
   Download, 
-  ShieldCheck,
   CreditCard,
   Lock,
   LogOut,
@@ -20,8 +19,6 @@ import {
 export const dynamic = 'force-dynamic';
 
 export default function AdminDashboard() {
-  // REMOVED: const supabase = createClientComponentClient();
-
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState(false);
@@ -123,8 +120,14 @@ export default function AdminDashboard() {
       <div className="min-h-[75vh] flex items-center justify-center p-4">
         <div className="bg-white border border-slate-200 p-8 rounded-2xl shadow-xl w-full max-w-md space-y-6">
           <div className="text-center space-y-3">
-            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mx-auto text-blue-600 border border-blue-100 shadow-inner">
-              <Lock className="w-7 h-7" />
+            <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto border border-blue-100 shadow-inner p-2">
+              <Image 
+                src="/logo.png" 
+                alt="Broadshore Logo" 
+                width={48} 
+                height={48} 
+                className="h-10 w-auto object-contain"
+              />
             </div>
             <h1 className="text-xl font-bold text-slate-900">Broadshore Admin Portal</h1>
             <p className="text-slate-500 text-xs">Enter your passcode to view live applicant data.</p>
@@ -161,15 +164,15 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-  <Image 
-    src="/logo.png" 
-    alt="Broadshore Logo" 
-    width={36} 
-    height={36} 
-    className="h-9 w-auto object-contain"
-  />
-  <span>Broadshore Live Processing Desk</span>
-</h1>
+            <Image 
+              src="/logo.png" 
+              alt="Broadshore Logo" 
+              width={36} 
+              height={36} 
+              className="h-9 w-auto object-contain"
+            />
+            <span>Broadshore Live Processing Desk</span>
+          </h1>
           <p className="text-sm text-slate-500 mt-1">Live database records from eCitizen and candidate portal.</p>
         </div>
 
