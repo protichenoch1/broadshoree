@@ -13,7 +13,9 @@ import {
   Lock,
   LogOut,
   RefreshCw,
-  Loader2
+  Loader2,
+  Plus,
+  X
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -31,9 +33,18 @@ export default function AdminDashboard() {
   const [passportApplications, setPassportApplications] = useState([]);
   const [jobApplications, setJobApplications] = useState([]);
 
+  // --- NEW JOB MODAL STATE ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newJob, setNewJob] = useState({
+    title: '',
+    destination: '',
+    category: '',
+    description: ''
+  });
+
   const ADMIN_SECRET = 'Bett2026#';
 
-  // Fetch real data from Supabase
   const fetchData = async () => {
     setLoading(true);
     
@@ -82,6 +93,35 @@ export default function AdminDashboard() {
     setSelectedItem(null);
   };
 
+  // --- ADD JOB SUBMISSION HANDLER ---
+  const handleCreateJob = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const { error } = await supabase
+      .from('jobs') // Inserts into your Supabase 'jobs' table
+      .insert([
+        {
+          title: newJob.title,
+          destination: newJob.destination,
+          category: newJob.category,
+          description: newJob.description,
+          status: 'Active'
+        }
+      ]);
+
+    setIsSubmitting(false);
+
+    if (error) {
+      alert(`Error creating job: ${error.message}`);
+    } else {
+      alert('Job posting created successfully!');
+      setNewJob({ title: '', destination: '', category: '', description: '' });
+      setIsModalOpen(false);
+      fetchData();
+    }
+  };
+
   const updateStatus = async (id, newStatus, table) => {
     const tableName = table === 'passport' ? 'passport_applications' : 'job_applications';
     
@@ -102,11 +142,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Generate secure download link from Supabase Storage
   const handleDownloadDoc = async (filePath) => {
     const { data, error } = await supabase.storage
       .from('applicant-documents')
-      .createSignedUrl(filePath, 60); // Link valid for 60 seconds
+      .createSignedUrl(filePath, 60);
 
     if (data?.signedUrl) {
       window.open(data.signedUrl, '_blank');
@@ -160,7 +199,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6">
+    <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6 relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
@@ -176,7 +215,14 @@ export default function AdminDashboard() {
           <p className="text-sm text-slate-500 mt-1">Live database records from eCitizen and candidate portal.</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> Post New Job
+          </button>
+
           <button
             onClick={fetchData}
             title="Refresh Data"
@@ -200,7 +246,7 @@ export default function AdminDashboard() {
                 activeTab === 'jobs' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Users className="w-4 h-4" /> Jobs ({jobApplications.length})
+              <Users className="w-4 h-4" /> Job Applications ({jobApplications.length})
             </button>
           </div>
 
@@ -214,6 +260,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* MAIN DASHBOARD CONTENT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center gap-3">
@@ -416,6 +463,90 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* --- CREATE NEW JOB POPUP MODAL --- */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden space-y-4 p-6">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h2 className="text-lg font-bold text-slate-900">Post New Job Listing</h2>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateJob} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Job Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Security Officer, Driver, Nurse"
+                  value={newJob.title}
+                  onChange={(e) => setNewJob({ ...newJob, title: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Destination</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Qatar, Saudi Arabia, UAE"
+                    value={newJob.destination}
+                    onChange={(e) => setNewJob({ ...newJob, destination: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Category</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Hospitality, Transport, Security"
+                    value={newJob.category}
+                    onChange={(e) => setNewJob({ ...newJob, category: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Job Requirements & Details</label>
+                <textarea
+                  rows={4}
+                  placeholder="Enter key requirements, salary details, or experience needed..."
+                  value={newJob.description}
+                  onChange={(e) => setNewJob({ ...newJob, description: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ></textarea>
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-1/2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Publish Job'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
