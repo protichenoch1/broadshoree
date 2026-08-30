@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from '@/lib/supabase';
 import { 
   Users, 
   FileCheck, 
@@ -16,6 +16,7 @@ import {
   Loader2
 } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
 export default function AdminDashboard() {
   const supabase = createClientComponentClient();
 
