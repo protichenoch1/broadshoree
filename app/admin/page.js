@@ -30,7 +30,7 @@ export default function AdminDashboard() {
   const [selectedItem, setSelectedItem] = useState(null);
 
   // Preferred admin access passcode
-  const ADMIN_SECRET = 'Broadshore2026!';
+  const ADMIN_SECRET = 'Bett2026#';
 
   const handleLogin = (e) => {
     e.preventDefault();
