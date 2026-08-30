@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -159,9 +160,16 @@ export default function AdminDashboard() {
     <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-7 h-7 text-blue-600" /> Broadshore Live Processing Desk
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+  <Image 
+    src="/logo.png" 
+    alt="Broadshore Logo" 
+    width={36} 
+    height={36} 
+    className="h-9 w-auto object-contain"
+  />
+  <span>Broadshore Live Processing Desk</span>
+</h1>
           <p className="text-sm text-slate-500 mt-1">Live database records from eCitizen and candidate portal.</p>
         </div>
 
