@@ -165,7 +165,7 @@ export default function AdminDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
             <Image 
-              src="/logo.png" 
+              src="/logo.jpeg" 
               alt="Broadshore Logo" 
               width={36} 
               height={36} 
