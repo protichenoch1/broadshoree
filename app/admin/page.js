@@ -190,7 +190,7 @@ export default function AdminDashboard() {
           <div className="text-center space-y-3">
             <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto border border-blue-100 shadow-inner p-2">
               <Image 
-                src="/logo.jpeg" 
+                src="/logoo.png" 
                 alt="Broadshore Logo" 
                 width={48} 
                 height={48} 
@@ -233,7 +233,7 @@ export default function AdminDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
             <Image 
-              src="/logo.jpeg" 
+              src="/logoo.png" 
               alt="Broadshore Logo" 
               width={36} 
               height={36} 
