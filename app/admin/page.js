@@ -17,8 +17,9 @@ import {
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+
 export default function AdminDashboard() {
-  const supabase = createClientComponentClient();
+  // REMOVED: const supabase = createClientComponentClient();
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passcode, setPasscode] = useState('');
