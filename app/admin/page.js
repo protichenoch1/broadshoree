@@ -15,7 +15,8 @@ import {
   RefreshCw,
   Loader2,
   Plus,
-  X
+  X,
+  Upload
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -25,7 +26,7 @@ export default function AdminDashboard() {
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('passports'); // 'passports' | 'jobs'
+  const [activeTab, setActiveTab] = useState('passports');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -36,6 +37,7 @@ export default function AdminDashboard() {
   // --- NEW JOB MODAL STATE ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
   const [newJob, setNewJob] = useState({
     title: '',
     destination: '',
@@ -48,7 +50,6 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     
-    // Fetch Passport Applications
     const { data: passports, error: passportErr } = await supabase
       .from('passport_applications')
       .select('*')
@@ -58,7 +59,6 @@ export default function AdminDashboard() {
       setPassportApplications(passports);
     }
 
-    // Fetch Job Applications
     const { data: jobs, error: jobErr } = await supabase
       .from('job_applications')
       .select('*')
@@ -93,19 +93,47 @@ export default function AdminDashboard() {
     setSelectedItem(null);
   };
 
-  // --- ADD JOB SUBMISSION HANDLER ---
+  // --- ADD JOB WITH IMAGE UPLOAD HANDLER ---
   const handleCreateJob = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    let imageUrl = null;
+
+    // Upload Image if selected
+    if (imageFile) {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `posters/${fileName}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from('job-logos')
+        .upload(filePath, imageFile);
+
+      if (uploadErr) {
+        alert(`Image upload failed: ${uploadErr.message}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Get Public URL
+      const { data: urlData } = supabase.storage
+        .from('job-logos')
+        .getPublicUrl(filePath);
+
+      imageUrl = urlData.publicUrl;
+    }
+
+    // Insert Job with image URL
     const { error } = await supabase
-      .from('jobs') // Inserts into your Supabase 'jobs' table
+      .from('jobs')
       .insert([
         {
           title: newJob.title,
           destination: newJob.destination,
           category: newJob.category,
           description: newJob.description,
+          image_url: imageUrl,
           status: 'Active'
         }
       ]);
@@ -115,8 +143,9 @@ export default function AdminDashboard() {
     if (error) {
       alert(`Error creating job: ${error.message}`);
     } else {
-      alert('Job posting created successfully!');
+      alert('Job listing posted successfully!');
       setNewJob({ title: '', destination: '', category: '', description: '' });
+      setImageFile(null);
       setIsModalOpen(false);
       fetchData();
     }
@@ -143,14 +172,14 @@ export default function AdminDashboard() {
   };
 
   const handleDownloadDoc = async (filePath) => {
-    const { data, error } = await supabase.storage
+    const { data } = await supabase.storage
       .from('applicant-documents')
       .createSignedUrl(filePath, 60);
 
     if (data?.signedUrl) {
       window.open(data.signedUrl, '_blank');
     } else {
-      alert('Could not generate download link. Please verify bucket permissions.');
+      alert('Could not generate download link.');
     }
   };
 
@@ -161,7 +190,7 @@ export default function AdminDashboard() {
           <div className="text-center space-y-3">
             <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto border border-blue-100 shadow-inner p-2">
               <Image 
-                src="/logo.png" 
+                src="/logo.jpeg" 
                 alt="Broadshore Logo" 
                 width={48} 
                 height={48} 
@@ -260,7 +289,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* MAIN DASHBOARD CONTENT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center gap-3">
@@ -467,7 +495,7 @@ export default function AdminDashboard() {
       {/* --- CREATE NEW JOB POPUP MODAL --- */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden space-y-4 p-6">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden space-y-4 p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <h2 className="text-lg font-bold text-slate-900">Post New Job Listing</h2>
               <button 
@@ -508,7 +536,7 @@ export default function AdminDashboard() {
                   <label className="block font-bold text-slate-700 mb-1">Category</label>
                   <input
                     type="text"
-                    placeholder="e.g. Hospitality, Transport, Security"
+                    placeholder="e.g. Hospitality, Security"
                     value={newJob.category}
                     onChange={(e) => setNewJob({ ...newJob, category: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -516,10 +544,32 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* IMAGE UPLOAD FIELD */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Job Poster / Company Logo</label>
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition">
+                    <div className="flex flex-col items-center justify-center pt-2 pb-2">
+                      <Upload className="w-5 h-5 text-slate-400 mb-1" />
+                      <p className="text-[11px] text-slate-500 font-semibold">
+                        {imageFile ? imageFile.name : 'Click to upload image file'}
+                      </p>
+                      <p className="text-[10px] text-slate-400">PNG, JPG or WEBP (Max 5MB)</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => setImageFile(e.target.files[0])}
+                    />
+                  </label>
+                </div>
+              </div>
+
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Job Requirements & Details</label>
                 <textarea
-                  rows={4}
+                  rows={3}
                   placeholder="Enter key requirements, salary details, or experience needed..."
                   value={newJob.description}
                   onChange={(e) => setNewJob({ ...newJob, description: e.target.value })}
