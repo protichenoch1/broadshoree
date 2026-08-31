@@ -12,8 +12,8 @@ function FormContent() {
 
   const [loading, setLoading] = useState(false);
   const [hasPassport, setHasPassport] = useState('yes');
-  
-  // Controlled Form Inputs
+
+  // Form State
   const [formData, setFormData] = useState({
     targetPosition: preselectedJob,
     destination: 'uk',
@@ -22,7 +22,7 @@ function FormContent() {
     languageScore: '',
   });
 
-  // File Inputs
+  // File Upload States
   const [passportFile, setPassportFile] = useState(null);
   const [idFile, setIdFile] = useState(null);
   const [cvFile, setCvFile] = useState(null);
@@ -32,7 +32,11 @@ function FormContent() {
     const val = e.target.value;
     setHasPassport(val);
     if (val === 'no') {
-      if (confirm('A valid passport with at least 6 months validity is required. Would you like to request eCitizen passport guidance now?')) {
+      if (
+        confirm(
+          'A valid passport with at least 6 months validity is required. Would you like to request eCitizen passport guidance now?'
+        )
+      ) {
         router.push('/passport');
       }
     }
@@ -46,7 +50,7 @@ function FormContent() {
     const filePath = `${folder}/${fileName}`;
 
     const { error: uploadErr } = await supabase.storage
-      .from('job-logos') // Reusing your public bucket or use 'applicant-docs'
+      .from('job-logos') // Uses your default public bucket
       .upload(filePath, file);
 
     if (uploadErr) {
@@ -66,37 +70,44 @@ function FormContent() {
     setLoading(true);
 
     try {
-      // 1. Upload files concurrently to storage (optional depending on selected files)
+      // 1. Upload files to Storage
       const passportUrl = await uploadFile(passportFile, 'passports');
       const cvUrl = await uploadFile(cvFile, 'cvs');
+      const idUrl = await uploadFile(idFile, 'identifications');
+      const dciUrl = await uploadFile(dciFile, 'clearances');
 
-      // 2. Insert application record into Supabase 'job_applications' table
+      // 2. Build JSON documents payload for the jsonb column
+      const documentsPayload = {
+        passport_url: passportUrl,
+        cv_url: cvUrl,
+        id_url: idUrl,
+        dci_url: dciUrl,
+      };
+
+      // 3. Insert record matching exact database columns
       const { data, error } = await supabase
         .from('job_applications')
         .insert([
           {
             full_name: formData.fullName,
             id_number: formData.idNumber,
-            target_position: formData.targetPosition || preselectedJob,
-            destination: formData.destination,
+            target_position: formData.targetPosition || preselectedJob || 'General Application',
+            destination_country: formData.destination, // Mapped to destination_country
             passport_status: hasPassport,
-            language_score: formData.languageScore,
-            passport_url: passportUrl,
-            cv_url: cvUrl,
+            language_score: formData.languageScore || null,
             status: 'Pending',
-          }
+            documents: documentsPayload, // Stored in the jsonb column
+          },
         ])
         .select();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       alert('Application and verification documents submitted successfully!');
       router.push('/dashboard');
     } catch (err) {
       console.error('Submission Error:', err);
-      alert(`Failed to submit application: ${err.message || 'Please check your connection and try again.'}`);
+      alert(`Database Error: ${err.message || 'Failed to process submission.'}`);
     } finally {
       setLoading(false);
     }
@@ -104,7 +115,6 @@ function FormContent() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      
       {/* 1. Job & Destination Selection */}
       <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
         <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
@@ -113,7 +123,9 @@ function FormContent() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Target Position</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              Target Position
+            </label>
             <input
               type="text"
               required
@@ -125,7 +137,9 @@ function FormContent() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Destination Country</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              Destination Country
+            </label>
             <select
               value={formData.destination}
               onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
@@ -149,31 +163,37 @@ function FormContent() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Full Name (As on ID / Passport)</label>
-            <input 
-              type="text" 
-              required 
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              Full Name (As on ID / Passport)
+            </label>
+            <input
+              type="text"
+              required
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              placeholder="e.g. Wanjiku Mary Kamau" 
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" 
+              placeholder="e.g. Wanjiku Mary Kamau"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">National ID Number</label>
-            <input 
-              type="text" 
-              required 
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              National ID Number
+            </label>
+            <input
+              type="text"
+              required
               value={formData.idNumber}
               onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
-              placeholder="12345678" 
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" 
+              placeholder="12345678"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Kenyan Passport Status</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+            Kenyan Passport Status
+          </label>
           <select
             value={hasPassport}
             onChange={handlePassportCheck}
@@ -188,21 +208,21 @@ function FormContent() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">Passport Copy (Bio Page)</label>
-            <input 
-              type="file" 
-              accept="image/*,.pdf" 
+            <input
+              type="file"
+              accept="image/*,.pdf"
               onChange={(e) => setPassportFile(e.target.files[0])}
-              className="w-full text-slate-500" 
+              className="w-full text-slate-500"
             />
           </div>
 
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">National ID & Birth Cert</label>
-            <input 
-              type="file" 
-              accept="image/*,.pdf" 
+            <input
+              type="file"
+              accept="image/*,.pdf"
               onChange={(e) => setIdFile(e.target.files[0])}
-              className="w-full text-slate-500" 
+              className="w-full text-slate-500"
             />
           </div>
 
@@ -222,11 +242,11 @@ function FormContent() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">Tailored CV / Resume (PDF)</label>
-            <input 
-              type="file" 
-              accept=".pdf,.doc,.docx" 
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
               onChange={(e) => setCvFile(e.target.files[0])}
-              className="w-full text-slate-500" 
+              className="w-full text-slate-500"
             />
           </div>
 
@@ -237,13 +257,15 @@ function FormContent() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Language Proficiency Score (IELTS / German Level / TOEFL - if applicable)</label>
-          <input 
-            type="text" 
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+            Language Proficiency Score (IELTS / German Level / TOEFL - if applicable)
+          </label>
+          <input
+            type="text"
             value={formData.languageScore}
             onChange={(e) => setFormData({ ...formData, languageScore: e.target.value })}
-            placeholder="e.g. IELTS General Score: 7.0 or N/A" 
-            className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" 
+            placeholder="e.g. IELTS General Score: 7.0 or N/A"
+            className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900"
           />
         </div>
       </div>
@@ -257,11 +279,11 @@ function FormContent() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">Certificate of Good Conduct (DCI)</label>
-            <input 
-              type="file" 
-              accept="image/*,.pdf" 
+            <input
+              type="file"
+              accept="image/*,.pdf"
               onChange={(e) => setDciFile(e.target.files[0])}
-              className="w-full text-slate-500" 
+              className="w-full text-slate-500"
             />
           </div>
 
@@ -279,7 +301,8 @@ function FormContent() {
         <div className="bg-blue-50 border border-blue-200 text-blue-900 p-3 rounded-lg text-xs flex items-start gap-2">
           <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
           <p>
-            <strong>NEAMIS Registration Notice:</strong> Broadshore cross-references candidate applications with the National Employment Authority Integrated Management System (NEAMIS) for legitimate Kenya labor export compliance.
+            <strong>NEAMIS Registration Notice:</strong> Broadshore cross-references candidate applications with the
+            National Employment Authority Integrated Management System (NEAMIS) for legitimate Kenya labor export compliance.
           </p>
         </div>
       </div>
@@ -293,7 +316,6 @@ function FormContent() {
         <Upload className="w-5 h-5" />
         {loading ? 'Uploading Application Profile...' : 'Submit Complete Candidate Application'}
       </button>
-
     </form>
   );
 }
@@ -303,7 +325,9 @@ export default function ApplyPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Overseas Candidate Registration</h1>
-        <p className="text-slate-600 text-sm mt-1">Upload your verified documents to apply for international job openings.</p>
+        <p className="text-slate-600 text-sm mt-1">
+          Upload your verified documents to apply for international job openings.
+        </p>
       </div>
 
       <Suspense fallback={<div className="text-slate-500 text-sm">Loading application portal...</div>}>
