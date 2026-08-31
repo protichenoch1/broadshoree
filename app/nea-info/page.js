@@ -1,104 +1,60 @@
-import Link from 'next/link';
-import { Globe, Mail, Phone, MapPin } from 'lucide-react';
-import Sidebar from '@/components/Sidebar';
-import './globals.css';
+import { createElement } from 'react';
+import { ShieldCheck, CheckCircle } from 'lucide-react';
 
-export const metadata = {
-  title: 'Broadshore Kenya',
-  description: 'Overseas Placements for Kenyan Citizens',
-};
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <body className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
-        {/* Top Header & Navigation */}
-        <Sidebar />
-
-        {/* Main Content Area */}
-        <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
-          {children}
-        </main>
-
-        {/* Global Footer */}
-        <footer className="bg-white border-t border-slate-200 mt-12">
-          <div className="max-w-7xl mx-auto px-6 py-10 md:py-12">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-              
-              {/* Col 1: Brand Info */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Globe className="text-blue-600 w-6 h-6" />
-                  <span className="text-xl font-bold tracking-wider text-slate-900">
-                    BROAD<span className="text-blue-600">SHORE</span> 🇰🇪
-                  </span>
-                </div>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Kenya’s premier overseas placement agency connecting qualified local talent with verified global employers.
-                </p>
-              </div>
-
-              {/* Col 2: Quick Links */}
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Quick Links</h3>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li>
-                    <Link href="/dashboard" className="hover:text-blue-600 transition">Job Dashboard</Link>
-                  </li>
-                  <li>
-                    <Link href="/apply" className="hover:text-blue-600 transition">Candidate Registration</Link>
-                  </li>
-                  <li>
-                    <Link href="/passport" className="hover:text-blue-600 transition">eCitizen Passport Support</Link>
-                  </li>
-                  <li>
-                    <Link href="/about" className="hover:text-blue-600 transition">About Us</Link>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Col 3: Support & Legal */}
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Resources</h3>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li>
-                    <Link href="/faqs" className="hover:text-blue-600 transition">FAQs & Support</Link>
-                  </li>
-                  <li><a href="#" className="hover:text-blue-600 transition">NEA Registration Info</a></li>
-                  <li><a href="#" className="hover:text-blue-600 transition">Terms of Service</a></li>
-                  <li><a href="#" className="hover:text-blue-600 transition">Privacy Policy</a></li>
-                </ul>
-              </div>
-
-              {/* Col 4: Contact Us */}
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Contact Us</h3>
-                <ul className="space-y-3 text-sm text-slate-600">
-                  <li className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span>Nairobi, Kenya</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span>+254 700 000 000</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span>support@broadshore.co.ke</span>
-                  </li>
-                </ul>
-              </div>
-
-            </div>
-
-            {/* Bottom Copyright Bar */}
-            <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-              <p>© 2026 BROADSHORE KENYA. All rights reserved.</p>
-              <p>Licensed Recruitment Agency</p>
-            </div>
-          </div>
-        </footer>
-      </body>
-    </html>
+export default function NeaInfoPage() {
+  return createElement(
+    'div',
+    { className: 'max-w-4xl mx-auto space-y-6' },
+    createElement(
+      'div',
+      { className: 'bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm space-y-6' },
+      createElement(
+        'div',
+        { className: 'flex items-center gap-3 border-b border-slate-100 pb-4' },
+        createElement(ShieldCheck, { className: 'w-7 h-7 text-emerald-600' }),
+        createElement(
+          'div',
+          null,
+          createElement('h1', { className: 'text-xl font-bold text-slate-900' }, 'NEA Registration & Licensing Info'),
+          createElement('p', { className: 'text-xs text-slate-500' }, 'National Employment Authority Compliance')
+        )
+      ),
+      createElement(
+        'div',
+        { className: 'space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed' },
+        createElement(
+          'p',
+          null,
+          'Broadshore International operates in strict adherence to the regulations established by the National Employment Authority (NEA) of Kenya under the Ministry of Labour and Social Protection.'
+        ),
+        createElement(
+          'div',
+          { className: 'bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-2' },
+          createElement('h3', { className: 'font-bold text-slate-900 text-sm' }, 'Key Compliance Standards'),
+          createElement(
+            'ul',
+            { className: 'space-y-2 text-xs text-slate-700' },
+            createElement(
+              'li',
+              { className: 'flex items-start gap-2' },
+              createElement(CheckCircle, { className: 'w-4 h-4 text-emerald-500 shrink-0 mt-0.5' }),
+              'Verified database registration via the NEAMIS online system.'
+            ),
+            createElement(
+              'li',
+              { className: 'flex items-start gap-2' },
+              createElement(CheckCircle, { className: 'w-4 h-4 text-emerald-500 shrink-0 mt-0.5' }),
+              'Strict adherence to zero hidden charges for candidate registration.'
+            ),
+            createElement(
+              'li',
+              { className: 'flex items-start gap-2' },
+              createElement(CheckCircle, { className: 'w-4 h-4 text-emerald-500 shrink-0 mt-0.5' }),
+              'Mandatory pre-departure orientation and contract attestation.'
+            )
+          )
+        )
+      )
+    )
   );
 }
