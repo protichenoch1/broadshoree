@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Briefcase, FileText, Globe, ShieldCheck } from 'lucide-react';
+import { Menu, X, Briefcase, FileText, Globe, ShieldCheck, Info, HelpCircle } from 'lucide-react';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,6 +12,8 @@ export default function Sidebar() {
     { name: 'Dashboard & Jobs', href: '/dashboard', icon: Briefcase },
     { name: 'Apply Now', href: '/apply', icon: FileText },
     { name: 'eCitizen Passport Help', href: '/passport', icon: ShieldCheck },
+    { name: 'About Us', href: '/about', icon: Info },
+    { name: 'FAQs & Support', href: '/faqs', icon: HelpCircle },
   ];
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -21,7 +23,7 @@ export default function Sidebar() {
       {/* Top Header Bar */}
       <header className="w-full bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-4">
-          {/* Three Lines (Hamburger Button) */}
+          {/* Hamburger Button */}
           <button
             onClick={toggleMenu}
             aria-label="Toggle Navigation Menu"
@@ -52,7 +54,7 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Slide-out Light Sidebar Menu */}
+      {/* Slide-out Sidebar Menu */}
       <aside
         className={`fixed top-0 left-0 h-full w-72 bg-white p-6 flex flex-col justify-between border-r border-slate-200 z-50 transform transition-transform duration-300 ease-in-out shadow-2xl ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -101,9 +103,10 @@ export default function Sidebar() {
         </div>
 
         {/* Footer */}
-        <div className="pt-6 border-t border-slate-100 text-xs text-slate-500">
+        <div className="pt-6 border-t border-slate-100 text-xs text-slate-500 space-y-1">
           <p className="font-bold text-slate-800">Broadshore Kenya</p>
           <p>Global Recruitment Gateway</p>
+          <p className="text-[10px] text-slate-400">NEAMIS Compliant</p>
         </div>
       </aside>
     </>
