@@ -12,20 +12,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
-        {/* Top Header & Navigation */}
         <Sidebar />
 
-        {/* Main Content Area */}
         <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
           {children}
         </main>
 
-        {/* Global Footer */}
         <footer className="bg-white border-t border-slate-200 mt-12">
           <div className="max-w-7xl mx-auto px-6 py-10 md:py-12">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
               
-              {/* Col 1: Brand Info */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Globe className="text-blue-600 w-6 h-6" />
@@ -38,7 +34,6 @@ export default function RootLayout({ children }) {
                 </p>
               </div>
 
-              {/* Col 2: Quick Links */}
               <div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Quick Links</h3>
                 <ul className="space-y-2 text-sm text-slate-600">
@@ -57,20 +52,24 @@ export default function RootLayout({ children }) {
                 </ul>
               </div>
 
-              {/* Col 3: Support & Legal */}
               <div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Resources</h3>
                 <ul className="space-y-2 text-sm text-slate-600">
                   <li>
                     <Link href="/faqs" className="hover:text-blue-600 transition">FAQs & Support</Link>
                   </li>
-                  <li><a href="#" className="hover:text-blue-600 transition">NEA Registration Info</a></li>
-                  <li><a href="#" className="hover:text-blue-600 transition">Terms of Service</a></li>
-                  <li><a href="#" className="hover:text-blue-600 transition">Privacy Policy</a></li>
+                  <li>
+                    <Link href="/nea-info" className="hover:text-blue-600 transition">NEA Registration Info</Link>
+                  </li>
+                  <li>
+                    <Link href="/terms" className="hover:text-blue-600 transition">Terms of Service</Link>
+                  </li>
+                  <li>
+                    <Link href="/privacy" className="hover:text-blue-600 transition">Privacy Policy</Link>
+                  </li>
                 </ul>
               </div>
 
-              {/* Col 4: Contact Us */}
               <div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Contact Us</h3>
                 <ul className="space-y-3 text-sm text-slate-600">
@@ -91,7 +90,6 @@ export default function RootLayout({ children }) {
 
             </div>
 
-            {/* Bottom Copyright Bar */}
             <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
               <p>© 2026 BROADSHORE KENYA. All rights reserved.</p>
               <p>Licensed Recruitment Agency</p>
