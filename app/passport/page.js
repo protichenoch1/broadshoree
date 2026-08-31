@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ShieldCheck, CreditCard, Upload, CheckCircle2, UserCheck, MapPin, FileText } from 'lucide-react';
+import { ShieldCheck, CreditCard, Upload, CheckCircle2, UserCheck, MapPin, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { uploadApplicantFile } from '@/lib/upload';
 
@@ -17,18 +17,18 @@ export default function PassportPage() {
     series_c: { name: 'Ordinary Series C (64 Pages)', officialFee: 12500, serviceFee: 1000 },
   };
 
-  const selectedFee = fees[passportType];
+  const selectedFee = fees[passportType as keyof typeof fees];
   const totalAmount = selectedFee.officialFee + selectedFee.serviceFee;
 
-  const handleFormSubmit = async (e) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const formData = new FormData(e.target);
-      const uploadedDocs = [];
+      const formElement = e.currentTarget;
+      const formData = new FormData(formElement);
+      const uploadedDocs: Array<{ label: string; [key: string]: any }> = [];
 
-      // Define files to upload to Supabase Storage
       const filesToUpload = [
         { field: 'birthCert', label: 'Birth Certificate' },
         { field: 'nationalId', label: 'National ID' },
@@ -49,7 +49,6 @@ export default function PassportPage() {
         }
       }
 
-      // Save intake payload directly to Supabase DB
       const { data, error } = await supabase
         .from('passport_applications')
         .insert([
@@ -84,10 +83,11 @@ export default function PassportPage() {
 
       if (error) throw error;
 
-      alert(`Application successfully saved to Supabase! M-Pesa prompt sent to ${phoneNumber}.`);
-      e.target.reset();
-    } catch (err) {
-      alert(`Error submitting application: ${err.message}`);
+      alert(`Application successfully saved to Supabase! STK prompt sent to ${phoneNumber}.`);
+      formElement.reset();
+      setPhoneNumber('');
+    } catch (err: any) {
+      alert(`Error submitting application: ${err.message || 'Submission failed'}`);
     } finally {
       setLoading(false);
     }
@@ -148,13 +148,13 @@ export default function PassportPage() {
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Select Biometrics Location</label>
                 <select name="biometricCenter" required className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium">
-                  <option value="nairobi">Nairobi (Nyayo House)</option>
-                  <option value="mombasa">Mombasa</option>
-                  <option value="kisumu">Kisumu</option>
-                  <option value="nakuru">Nakuru</option>
-                  <option value="eldoret">Eldoret</option>
-                  <option value="embu">Embu</option>
-                  <option value="kisii">Kisii</option>
+                  <option value="Nairobi (Nyayo House)">Nairobi (Nyayo House)</option>
+                  <option value="Mombasa">Mombasa</option>
+                  <option value="Kisumu">Kisumu</option>
+                  <option value="Nakuru">Nakuru</option>
+                  <option value="Eldoret">Eldoret</option>
+                  <option value="Embu">Embu</option>
+                  <option value="Kisii">Kisii</option>
                 </select>
               </div>
             </div>
@@ -298,7 +298,7 @@ export default function PassportPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Phone Number (WhatsApp)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Phone Number (M-Pesa)</label>
                 <input
                   type="tel"
                   required
@@ -372,10 +372,17 @@ export default function PassportPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-lg transition flex items-center justify-center gap-2 shadow-sm text-sm"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-bold py-3.5 rounded-lg transition flex items-center justify-center gap-2 shadow-sm text-sm cursor-pointer"
             >
-              <CreditCard className="w-5 h-5" />
-              {loading ? 'Uploading Files & Submitting...' : `Submit Intake & Pay KSh ${totalAmount.toLocaleString()} via M-Pesa`}
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" /> Uploading Files & Submitting...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-5 h-5" /> Submit Intake & Pay KSh {totalAmount.toLocaleString()} via M-Pesa
+                </>
+              )}
             </button>
           </div>
 
