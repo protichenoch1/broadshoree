@@ -17,17 +17,17 @@ export default function PassportPage() {
     series_c: { name: 'Ordinary Series C (64 Pages)', officialFee: 12500, serviceFee: 1000 },
   };
 
-  const selectedFee = fees[passportType as keyof typeof fees];
+  const selectedFee = fees[passportType] || fees.series_a;
   const totalAmount = selectedFee.officialFee + selectedFee.serviceFee;
 
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       const formElement = e.currentTarget;
       const formData = new FormData(formElement);
-      const uploadedDocs: Array<{ label: string; [key: string]: any }> = [];
+      const uploadedDocs = [];
 
       const filesToUpload = [
         { field: 'birthCert', label: 'Birth Certificate' },
@@ -86,7 +86,7 @@ export default function PassportPage() {
       alert(`Application successfully saved to Supabase! STK prompt sent to ${phoneNumber}.`);
       formElement.reset();
       setPhoneNumber('');
-    } catch (err: any) {
+    } catch (err) {
       alert(`Error submitting application: ${err.message || 'Submission failed'}`);
     } finally {
       setLoading(false);
