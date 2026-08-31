@@ -51,6 +51,9 @@ export default function RootLayout({ children }) {
                   <li>
                     <Link href="/passport" className="hover:text-blue-600 transition">eCitizen Passport Support</Link>
                   </li>
+                  <li>
+                    <Link href="/about" className="hover:text-blue-600 transition">About Us</Link>
+                  </li>
                 </ul>
               </div>
 
@@ -58,6 +61,9 @@ export default function RootLayout({ children }) {
               <div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Resources</h3>
                 <ul className="space-y-2 text-sm text-slate-600">
+                  <li>
+                    <Link href="/faqs" className="hover:text-blue-600 transition">FAQs & Support</Link>
+                  </li>
                   <li><a href="#" className="hover:text-blue-600 transition">NEA Registration Info</a></li>
                   <li><a href="#" className="hover:text-blue-600 transition">Terms of Service</a></li>
                   <li><a href="#" className="hover:text-blue-600 transition">Privacy Policy</a></li>
