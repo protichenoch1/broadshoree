@@ -2,16 +2,31 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Briefcase, FileText, ShieldCheck, HeartPulse, Upload, CheckCircle2 } from 'lucide-react';
+import { Briefcase, FileText, ShieldCheck, Upload, CheckCircle2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 function FormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedJob = searchParams.get('job') || '';
 
-  const [hasPassport, setHasPassport] = useState('yes');
-  const [destination, setDestination] = useState('uk');
   const [loading, setLoading] = useState(false);
+  const [hasPassport, setHasPassport] = useState('yes');
+  
+  // Controlled Form Inputs
+  const [formData, setFormData] = useState({
+    targetPosition: preselectedJob,
+    destination: 'uk',
+    fullName: '',
+    idNumber: '',
+    languageScore: '',
+  });
+
+  // File Inputs
+  const [passportFile, setPassportFile] = useState(null);
+  const [idFile, setIdFile] = useState(null);
+  const [cvFile, setCvFile] = useState(null);
+  const [dciFile, setDciFile] = useState(null);
 
   const handlePassportCheck = (e) => {
     const val = e.target.value;
@@ -23,15 +38,68 @@ function FormContent() {
     }
   };
 
-  const handleSubmit = (e) => {
+  // Helper function to upload files to Supabase Storage
+  const uploadFile = async (file, folder) => {
+    if (!file) return null;
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${folder}/${fileName}`;
+
+    const { error: uploadErr } = await supabase.storage
+      .from('job-logos') // Reusing your public bucket or use 'applicant-docs'
+      .upload(filePath, file);
+
+    if (uploadErr) {
+      console.error(`Upload error for ${folder}:`, uploadErr);
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('job-logos')
+      .getPublicUrl(filePath);
+
+    return urlData.publicUrl;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      alert('Application and verification documents submitted successfully! Our recruitment team will review your profile.');
+    try {
+      // 1. Upload files concurrently to storage (optional depending on selected files)
+      const passportUrl = await uploadFile(passportFile, 'passports');
+      const cvUrl = await uploadFile(cvFile, 'cvs');
+
+      // 2. Insert application record into Supabase 'job_applications' table
+      const { data, error } = await supabase
+        .from('job_applications')
+        .insert([
+          {
+            full_name: formData.fullName,
+            id_number: formData.idNumber,
+            target_position: formData.targetPosition || preselectedJob,
+            destination: formData.destination,
+            passport_status: hasPassport,
+            language_score: formData.languageScore,
+            passport_url: passportUrl,
+            cv_url: cvUrl,
+            status: 'Pending',
+          }
+        ])
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      alert('Application and verification documents submitted successfully!');
       router.push('/dashboard');
-    }, 1500);
+    } catch (err) {
+      console.error('Submission Error:', err);
+      alert(`Failed to submit application: ${err.message || 'Please check your connection and try again.'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,7 +117,8 @@ function FormContent() {
             <input
               type="text"
               required
-              defaultValue={preselectedJob}
+              value={formData.targetPosition}
+              onChange={(e) => setFormData({ ...formData, targetPosition: e.target.value })}
               placeholder="e.g. Registered Nurse, Heavy Equipment Driver"
               className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500"
             />
@@ -58,8 +127,8 @@ function FormContent() {
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Destination Country</label>
             <select
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
+              value={formData.destination}
+              onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
               className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900 font-medium focus:ring-2 focus:ring-blue-500"
             >
               <option value="uk">United Kingdom (NHS / Healthcare / Care Work)</option>
@@ -81,11 +150,25 @@ function FormContent() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Full Name (As on ID / Passport)</label>
-            <input type="text" required placeholder="e.g. Wanjiku Mary Kamau" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+            <input 
+              type="text" 
+              required 
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              placeholder="e.g. Wanjiku Mary Kamau" 
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" 
+            />
           </div>
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">National ID Number</label>
-            <input type="text" required placeholder="12345678" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+            <input 
+              type="text" 
+              required 
+              value={formData.idNumber}
+              onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
+              placeholder="12345678" 
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" 
+            />
           </div>
         </div>
 
@@ -105,17 +188,27 @@ function FormContent() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">Passport Copy (Bio Page)</label>
-            <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+            <input 
+              type="file" 
+              accept="image/*,.pdf" 
+              onChange={(e) => setPassportFile(e.target.files[0])}
+              className="w-full text-slate-500" 
+            />
           </div>
 
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">National ID & Birth Cert</label>
-            <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+            <input 
+              type="file" 
+              accept="image/*,.pdf" 
+              onChange={(e) => setIdFile(e.target.files[0])}
+              className="w-full text-slate-500" 
+            />
           </div>
 
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">Passport & Full-Size Photo</label>
-            <input type="file" required accept="image/*" className="w-full text-slate-500" />
+            <input type="file" accept="image/*" className="w-full text-slate-500" />
           </div>
         </div>
       </div>
@@ -129,28 +222,29 @@ function FormContent() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">Tailored CV / Resume (PDF)</label>
-            <input type="file" required accept=".pdf,.doc,.docx" className="w-full text-slate-500" />
+            <input 
+              type="file" 
+              accept=".pdf,.doc,.docx" 
+              onChange={(e) => setCvFile(e.target.files[0])}
+              className="w-full text-slate-500" 
+            />
           </div>
 
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">Academic Certificates & Transcripts</label>
-            <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
-          </div>
-
-          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
-            <label className="block font-bold text-slate-800 mb-1">Trade Test / Professional Licenses</label>
             <input type="file" accept="image/*,.pdf" className="w-full text-slate-500" />
-          </div>
-
-          <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
-            <label className="block font-bold text-slate-800 mb-1">Cover Letter (Optional)</label>
-            <input type="file" accept=".pdf,.doc,.docx" className="w-full text-slate-500" />
           </div>
         </div>
 
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Language Proficiency Score (IELTS / German Level / TOEFL - if applicable)</label>
-          <input type="text" placeholder="e.g. IELTS General Score: 7.0 or N/A" className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" />
+          <input 
+            type="text" 
+            value={formData.languageScore}
+            onChange={(e) => setFormData({ ...formData, languageScore: e.target.value })}
+            placeholder="e.g. IELTS General Score: 7.0 or N/A" 
+            className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900" 
+          />
         </div>
       </div>
 
@@ -163,7 +257,12 @@ function FormContent() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
             <label className="block font-bold text-slate-800 mb-1">Certificate of Good Conduct (DCI)</label>
-            <input type="file" required accept="image/*,.pdf" className="w-full text-slate-500" />
+            <input 
+              type="file" 
+              accept="image/*,.pdf" 
+              onChange={(e) => setDciFile(e.target.files[0])}
+              className="w-full text-slate-500" 
+            />
           </div>
 
           <div className="border border-dashed border-slate-300 p-3 rounded-lg bg-slate-50">
