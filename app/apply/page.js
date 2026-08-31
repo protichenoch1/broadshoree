@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Briefcase, FileText, ShieldCheck, Upload, CheckCircle2 } from 'lucide-react';
+import { Briefcase, FileText, ShieldCheck, Upload, CheckCircle2, Phone, Mail, Calendar, MessageSquare } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 function FormContent() {
@@ -13,12 +13,16 @@ function FormContent() {
   const [loading, setLoading] = useState(false);
   const [hasPassport, setHasPassport] = useState('yes');
 
-  // Form State
+  // Form State with new contact and personal info fields
   const [formData, setFormData] = useState({
     targetPosition: preselectedJob,
     destination: 'uk',
     fullName: '',
     idNumber: '',
+    phoneNumber: '',
+    emailAddress: '',
+    whatsappNumber: '',
+    dob: '',
     languageScore: '',
   });
 
@@ -50,7 +54,7 @@ function FormContent() {
     const filePath = `${folder}/${fileName}`;
 
     const { error: uploadErr } = await supabase.storage
-      .from('job-logos') // Uses your default public bucket
+      .from('job-logos')
       .upload(filePath, file);
 
     if (uploadErr) {
@@ -76,7 +80,7 @@ function FormContent() {
       const idUrl = await uploadFile(idFile, 'identifications');
       const dciUrl = await uploadFile(dciFile, 'clearances');
 
-      // 2. Build JSON documents payload for the jsonb column
+      // 2. Build JSON documents payload
       const documentsPayload = {
         passport_url: passportUrl,
         cv_url: cvUrl,
@@ -84,19 +88,23 @@ function FormContent() {
         dci_url: dciUrl,
       };
 
-      // 3. Insert record matching exact database columns
+      // 3. Insert record matching updated database columns
       const { data, error } = await supabase
         .from('job_applications')
         .insert([
           {
             full_name: formData.fullName,
             id_number: formData.idNumber,
+            phone_number: formData.phoneNumber,
+            email_address: formData.emailAddress,
+            whatsapp_number: formData.whatsappNumber || formData.phoneNumber,
+            dob: formData.dob,
             target_position: formData.targetPosition || preselectedJob || 'General Application',
-            destination_country: formData.destination, // Mapped to destination_country
+            destination_country: formData.destination,
             passport_status: hasPassport,
             language_score: formData.languageScore || null,
             status: 'Pending',
-            documents: documentsPayload, // Stored in the jsonb column
+            documents: documentsPayload,
           },
         ])
         .select();
@@ -155,13 +163,13 @@ function FormContent() {
         </div>
       </div>
 
-      {/* 2. Personal & Travel Documents */}
+      {/* 2. Personal & Contact Details */}
       <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
         <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-          <FileText className="w-5 h-5 text-blue-600" /> 1. Personal & Travel Documents
+          <FileText className="w-5 h-5 text-blue-600" /> 1. Personal & Contact Details
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
               Full Name (As on ID / Passport)
@@ -185,6 +193,59 @@ function FormContent() {
               value={formData.idNumber}
               onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
               placeholder="12345678"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-slate-500" /> Date of Birth
+            </label>
+            <input
+              type="date"
+              required
+              value={formData.dob}
+              onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center gap-1">
+              <Phone className="w-3.5 h-3.5 text-slate-500" /> Phone Number
+            </label>
+            <input
+              type="tel"
+              required
+              value={formData.phoneNumber}
+              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+              placeholder="07XX XXX XXX"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center gap-1">
+              <MessageSquare className="w-3.5 h-3.5 text-slate-500" /> WhatsApp Number
+            </label>
+            <input
+              type="tel"
+              value={formData.whatsappNumber}
+              onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
+              placeholder="07XX XXX XXX (Optional)"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center gap-1">
+              <Mail className="w-3.5 h-3.5 text-slate-500" /> Email Address
+            </label>
+            <input
+              type="email"
+              required
+              value={formData.emailAddress}
+              onChange={(e) => setFormData({ ...formData, emailAddress: e.target.value })}
+              placeholder="applicant@gmail.com"
               className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm text-slate-900"
             />
           </div>
