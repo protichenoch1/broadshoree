@@ -10,13 +10,17 @@ import {
   Eye, 
   Download, 
   CreditCard,
-  Lock,
   LogOut,
   RefreshCw,
   Loader2,
   Plus,
   X,
-  Upload
+  Upload,
+  Mail,
+  Phone,
+  Calendar,
+  FileText,
+  UserCheck
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -100,7 +104,6 @@ export default function AdminDashboard() {
 
     let imageUrl = null;
 
-    // Upload Image if selected
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
@@ -116,7 +119,6 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Get Public URL
       const { data: urlData } = supabase.storage
         .from('job-logos')
         .getPublicUrl(filePath);
@@ -124,7 +126,6 @@ export default function AdminDashboard() {
       imageUrl = urlData.publicUrl;
     }
 
-    // Insert Job with image URL
     const { error } = await supabase
       .from('jobs')
       .insert([
@@ -171,7 +172,15 @@ export default function AdminDashboard() {
     }
   };
 
+  // Universal document opener (Handles both direct Storage URLs and bucket file paths)
   const handleDownloadDoc = async (filePath) => {
+    if (!filePath) return;
+
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      window.open(filePath, '_blank');
+      return;
+    }
+
     const { data } = await supabase.storage
       .from('applicant-documents')
       .createSignedUrl(filePath, 60);
@@ -181,6 +190,57 @@ export default function AdminDashboard() {
     } else {
       alert('Could not generate download link.');
     }
+  };
+
+  // Extract documents from JSON or Arrays across different schemas
+  const renderDocumentLinks = (item) => {
+    // Check array format (e.g. passport_applications)
+    if (Array.isArray(item.document_paths) && item.document_paths.length > 0) {
+      return item.document_paths.map((path, idx) => (
+        <div key={idx} className="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200 text-slate-700">
+          <span className="truncate pr-2">{path.split('/').pop()}</span>
+          <button 
+            onClick={() => handleDownloadDoc(path)}
+            className="text-blue-600 hover:text-blue-800 flex items-center gap-1 font-semibold"
+          >
+            <Download className="w-3.5 h-3.5" /> Download
+          </button>
+        </div>
+      ));
+    }
+
+    // Check JSON Object or columns format (e.g. job_applications)
+    const docsObj = item.documents || {};
+    const docKeys = [
+      { key: 'passport_url', label: 'Passport Bio Copy' },
+      { key: 'cv_url', label: 'Resume / CV' },
+      { key: 'id_url', label: 'National ID' },
+      { key: 'dci_url', label: 'Good Conduct (DCI)' }
+    ];
+
+    const availableDocs = docKeys.filter(doc => docsObj[doc.key] || item[doc.key]);
+
+    if (availableDocs.length > 0) {
+      return availableDocs.map((doc, idx) => {
+        const url = docsObj[doc.key] || item[doc.key];
+        return (
+          <div key={idx} className="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200 text-slate-700">
+            <span className="font-medium flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-blue-600" />
+              {doc.label}
+            </span>
+            <button 
+              onClick={() => handleDownloadDoc(url)}
+              className="text-blue-600 hover:text-blue-800 flex items-center gap-1 font-semibold"
+            >
+              <Download className="w-3.5 h-3.5" /> View File
+            </button>
+          </div>
+        );
+      });
+    }
+
+    return <p className="text-slate-400 italic text-xs">No documents attached to this record.</p>;
   };
 
   if (!isAuthenticated) {
@@ -365,10 +425,10 @@ export default function AdminDashboard() {
                             </td>
                             <td className="p-3.5">
                               <div className="font-medium text-slate-800">{app.target_position}</div>
-                              <div className="text-[11px] text-slate-500">{app.destination}</div>
+                              <div className="text-[11px] text-slate-500">{app.destination || app.destination_country}</div>
                             </td>
                             <td className="p-3.5">
-                              <div className="text-xs font-medium text-slate-700">{app.passport_status}</div>
+                              <div className="text-xs font-medium text-slate-700">{app.passport_status || 'Yes'}</div>
                             </td>
                             <td className="p-3.5">
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
@@ -393,45 +453,33 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Right Inspection Panel */}
         <div className="space-y-6">
           {selectedItem ? (
             <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-md space-y-6 sticky top-6">
               <div className="flex justify-between items-start border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">{selectedItem.full_name}</h3>
-                  <p className="text-xs text-slate-500">ID: {selectedItem.id_number}</p>
+                  <p className="text-xs text-slate-500">ID / Passport No: {selectedItem.id_number}</p>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
+                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
                   {selectedItem.status || 'Pending'}
                 </span>
               </div>
 
+              {/* Passport Applicant Section */}
               {activeTab === 'passports' && (
                 <div className="space-y-4 text-xs">
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1 text-slate-700">
-                    <p><strong>DOB:</strong> {selectedItem.dob}</p>
-                    <p><strong>KRA PIN:</strong> {selectedItem.kra_pin}</p>
-                    <p><strong>Phone:</strong> {selectedItem.phone}</p>
-                    <p><strong>Email:</strong> {selectedItem.email}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2 text-slate-700">
+                    <p className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5 text-slate-400"/> <strong>DOB:</strong> {selectedItem.dob || 'N/A'}</p>
+                    <p className="flex items-center gap-2"><UserCheck className="w-3.5 h-3.5 text-slate-400"/> <strong>KRA PIN:</strong> {selectedItem.kra_pin || 'N/A'}</p>
+                    <p className="flex items-center gap-2"><Phone className="w-3.5 h-3.5 text-slate-400"/> <strong>Phone:</strong> {selectedItem.phone || selectedItem.phone_number || 'N/A'}</p>
+                    <p className="flex items-center gap-2"><Mail className="w-3.5 h-3.5 text-slate-400"/> <strong>Email:</strong> {selectedItem.email || selectedItem.email_address || 'N/A'}</p>
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="font-bold text-slate-900">Document Bucket Files</h4>
-                    {selectedItem.document_paths && selectedItem.document_paths.length > 0 ? (
-                      selectedItem.document_paths.map((path, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200 text-slate-700">
-                          <span className="truncate pr-2">{path.split('/').pop()}</span>
-                          <button 
-                            onClick={() => handleDownloadDoc(path)}
-                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1 font-semibold"
-                          >
-                            <Download className="w-3.5 h-3.5" /> Download
-                          </button>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-slate-400 italic">No files attached to this record.</p>
-                    )}
+                    <h4 className="font-bold text-slate-900">Uploaded Documents</h4>
+                    {renderDocumentLinks(selectedItem)}
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 space-y-2">
@@ -454,12 +502,21 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* Job Applicant Section */}
               {activeTab === 'jobs' && (
                 <div className="space-y-4 text-xs">
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1 text-slate-700">
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2 text-slate-700">
                     <p><strong>Target Position:</strong> {selectedItem.target_position}</p>
-                    <p><strong>Destination:</strong> {selectedItem.destination}</p>
-                    <p><strong>Passport:</strong> {selectedItem.passport_status}</p>
+                    <p><strong>Destination:</strong> {selectedItem.destination || selectedItem.destination_country || 'Not Specified'}</p>
+                    <p><strong>Passport Status:</strong> {selectedItem.passport_status || 'Yes'}</p>
+                    <p className="flex items-center gap-2 pt-1 border-t border-slate-200"><Phone className="w-3.5 h-3.5 text-slate-400"/> <strong>Phone:</strong> {selectedItem.phone_number || selectedItem.phone || 'N/A'}</p>
+                    <p className="flex items-center gap-2"><Mail className="w-3.5 h-3.5 text-slate-400"/> <strong>Email:</strong> {selectedItem.email_address || selectedItem.email || 'N/A'}</p>
+                    <p className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5 text-slate-400"/> <strong>DOB:</strong> {selectedItem.dob || 'N/A'}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-slate-900">Uploaded Documents</h4>
+                    {renderDocumentLinks(selectedItem)}
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 space-y-2">
@@ -544,7 +601,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* IMAGE UPLOAD FIELD */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Job Poster / Company Logo</label>
                 <div className="flex items-center justify-center w-full">
