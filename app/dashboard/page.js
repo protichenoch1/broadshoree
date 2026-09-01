@@ -53,6 +53,14 @@ export default function DashboardPage() {
       tag: 'Visa + Housing',
       image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80'
     },
+    { 
+      id: 4, 
+      title: 'Taxi Driver', 
+      country: 'Saudi Arabia', 
+      salary: 'KSh 100,000 / mo', 
+      tag: 'Transport',
+      image: 'https://unsplash.com/photos/man-driving-vehicle-with-gps-system-turned-on-kARZuSYMfrA'
+    },
   ]);
 
   // Handle Application Search
