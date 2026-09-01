@@ -59,7 +59,7 @@ export default function DashboardPage() {
       country: 'Saudi Arabia', 
       salary: 'KSh 100,000 / mo', 
       tag: 'Transport',
-      image: 'https://unsplash.com/photos/man-driving-vehicle-with-gps-system-turned-on-kARZuSYMfrA'
+      image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=80'
     },
   ]);
 
