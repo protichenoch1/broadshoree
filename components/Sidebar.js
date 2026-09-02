@@ -36,7 +36,7 @@ export default function Sidebar() {
           <div className="flex items-center gap-2">
             <Globe className="text-blue-600 w-6 h-6" />
             <span className="text-lg font-bold tracking-wider text-slate-900">
-              BROAD<span className="text-blue-600">SHORE</span> 🇰🇪
+              BROAD<span className="text-blue-600">SHORE</span>
             </span>
           </div>
         </div>
