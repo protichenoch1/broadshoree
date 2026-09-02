@@ -21,34 +21,35 @@ export default function Sidebar() {
   return (
     <>
       {/* Top Header Bar */}
-      <header className="w-full bg-white border-b border-slate-200 px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center gap-4">
+      <header className="w-full bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
           {/* Hamburger Button */}
           <button
             onClick={toggleMenu}
             aria-label="Toggle Navigation Menu"
-            className="p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition focus:outline-none"
+            className="p-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition shrink-0 focus:outline-none"
           >
-            <Menu className="w-7 h-7" />
+            <Menu className="w-6 h-6" />
           </button>
 
-          {/* Top Header Bar */}
-<Link href="/dashboard" className="flex items-center gap-3">
-  <img
-    src="/logo.png"
-    alt="Broadshore Logo"
-    className="h-12 w-auto object-contain"
-    onError={(e) => {
-      e.target.style.display = 'none';
-    }}
-  />
-  <span className="text-xl font-extrabold tracking-wider text-slate-900">
-    BROAD<span className="text-blue-600">SHORE</span>
-  </span>
-</Link>
+          {/* Logo Brand */}
+          <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+            <img
+              src="/logo.png"
+              alt="Broadshore Logo"
+              className="h-9 sm:h-10 w-auto object-contain shrink-0"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+            <span className="text-base sm:text-lg font-extrabold tracking-wider text-slate-900 truncate">
+              BROAD<span className="text-blue-600">SHORE</span>
+            </span>
+          </Link>
         </div>
 
-        <div className="text-xs text-slate-500 font-semibold bg-slate-100 px-3.5 py-1.5 rounded-full border border-slate-200">
+        {/* Official Portal Badge - shrink-0 & whitespace-nowrap prevents overlapping */}
+        <div className="text-[11px] text-slate-500 font-semibold bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 shrink-0 whitespace-nowrap">
           Official Portal
         </div>
       </header>
@@ -68,10 +69,10 @@ export default function Sidebar() {
         }`}
       >
         <div>
-          {/* Header - Increased size */}
+          {/* Drawer Header */}
           <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="relative w-12 h-12 rounded-xl bg-slate-900 overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
+              <div className="relative w-10 h-10 rounded-xl bg-slate-900 overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
                 <img
                   src="/logo.png"
                   alt="Broadshore Logo"
@@ -81,9 +82,9 @@ export default function Sidebar() {
                     e.target.nextSibling.style.display = 'block';
                   }}
                 />
-                <Globe className="hidden w-7 h-7 text-blue-500" />
+                <Globe className="hidden w-6 h-6 text-blue-500" />
               </div>
-              <h2 className="text-xl font-extrabold text-slate-900 tracking-wider">
+              <h2 className="text-lg font-extrabold text-slate-900 tracking-wider">
                 BROAD<span className="text-blue-600">SHORE</span>
               </h2>
             </div>
