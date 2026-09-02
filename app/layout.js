@@ -79,7 +79,7 @@ export default function RootLayout({ children }) {
                   </li>
                   <li className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span>+254 700 000 000</span>
+                    <span>+254 111 721 048</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-blue-600 shrink-0" />
