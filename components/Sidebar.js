@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Briefcase, FileText, Globe, ShieldCheck, Info, HelpCircle } from 'lucide-react';
+import { Menu, X, Briefcase, FileText, ShieldCheck, Info, HelpCircle, Globe } from 'lucide-react';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,12 +34,23 @@ export default function Sidebar() {
           </button>
 
           {/* Logo Brand */}
-          <div className="flex items-center gap-2">
-            <Globe className="text-blue-600 w-6 h-6" />
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <div className="relative w-8 h-8 rounded-lg bg-slate-900 overflow-hidden flex items-center justify-center shrink-0">
+              <img
+                src="/logo.png"
+                alt="Broadshore Logo"
+                className="w-full h-full object-contain p-0.5"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+              <Globe className="hidden w-5 h-5 text-blue-500" />
+            </div>
             <span className="text-lg font-bold tracking-wider text-slate-900">
               BROAD<span className="text-blue-600">SHORE</span>
             </span>
-          </div>
+          </Link>
         </div>
 
         <div className="text-xs text-slate-500 font-semibold bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
@@ -63,8 +75,19 @@ export default function Sidebar() {
         <div>
           {/* Header */}
           <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <Globe className="text-blue-600 w-6 h-6" />
+            <div className="flex items-center gap-2.5">
+              <div className="relative w-8 h-8 rounded-lg bg-slate-900 overflow-hidden flex items-center justify-center shrink-0">
+                <img
+                  src="/logo.png"
+                  alt="Broadshore Logo"
+                  className="w-full h-full object-contain p-0.5"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+                <Globe className="hidden w-5 h-5 text-blue-500" />
+              </div>
               <h2 className="text-lg font-bold text-slate-900">
                 BROAD<span className="text-blue-600">SHORE</span>
               </h2>
