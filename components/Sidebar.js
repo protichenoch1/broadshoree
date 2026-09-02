@@ -32,24 +32,20 @@ export default function Sidebar() {
             <Menu className="w-7 h-7" />
           </button>
 
-          {/* Logo Brand - Increased size */}
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="relative w-11 h-11 rounded-xl bg-slate-900 overflow-hidden flex items-center justify-center shrink-0 shadow-sm">
-              <img
-                src="/broadlogo.png"
-                alt="Broadshore Logo"
-                className="w-full h-full object-contain p-1"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'block';
-                }}
-              />
-              <Globe className="hidden w-6 h-6 text-blue-500" />
-            </div>
-            <span className="text-xl font-extrabold tracking-wider text-slate-900">
-              BROAD<span className="text-blue-600">SHORE</span>
-            </span>
-          </Link>
+          {/* Top Header Bar */}
+<Link href="/dashboard" className="flex items-center gap-3">
+  <img
+    src="/logo.png"
+    alt="Broadshore Logo"
+    className="h-12 w-auto object-contain"
+    onError={(e) => {
+      e.target.style.display = 'none';
+    }}
+  />
+  <span className="text-xl font-extrabold tracking-wider text-slate-900">
+    BROAD<span className="text-blue-600">SHORE</span>
+  </span>
+</Link>
         </div>
 
         <div className="text-xs text-slate-500 font-semibold bg-slate-100 px-3.5 py-1.5 rounded-full border border-slate-200">
