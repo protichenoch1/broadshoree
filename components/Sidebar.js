@@ -37,7 +37,7 @@ export default function Sidebar() {
           <Link href="/dashboard" className="flex items-center gap-2.5">
             <div className="relative w-8 h-8 rounded-lg bg-slate-900 overflow-hidden flex items-center justify-center shrink-0">
               <img
-                src="/logo.png"
+                src="/broadlogo.png"
                 alt="Broadshore Logo"
                 className="w-full h-full object-contain p-0.5"
                 onError={(e) => {
