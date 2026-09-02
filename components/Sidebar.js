@@ -35,7 +35,7 @@ export default function Sidebar() {
           {/* Top Header Bar */}
 <Link href="/dashboard" className="flex items-center gap-3">
   <img
-    src="/broadlogo.png"
+    src="/logo.png"
     alt="Broadshore Logo"
     className="h-12 w-auto object-contain"
     onError={(e) => {
